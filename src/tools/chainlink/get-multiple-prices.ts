@@ -27,7 +27,25 @@ export async function getMultiplePricesExecute(
   const results = [];
   const errors = [];
 
+  // Validate each pair before processing
   for (const pair of params.pairs) {
+    // Input validation
+    if (!pair.base || typeof pair.base !== 'string' || pair.base.trim().length === 0) {
+      errors.push({
+        pair: `${pair.base}/${pair.quote}`,
+        error: "Invalid base symbol: must be a non-empty string"
+      });
+      continue;
+    }
+    
+    if (!pair.quote || typeof pair.quote !== 'string' || pair.quote.trim().length === 0) {
+      errors.push({
+        pair: `${pair.base}/${pair.quote}`,
+        error: "Invalid quote symbol: must be a non-empty string"
+      });
+      continue;
+    }
+
     try {
       const result = await getCryptoPriceExecute(client, context, pair);
       results.push(result);

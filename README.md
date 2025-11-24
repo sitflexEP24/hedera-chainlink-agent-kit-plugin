@@ -1,6 +1,6 @@
 # Hedera Chainlink Oracle Plugin
 
-A comprehensive Chainlink oracle plugin for Hedera Agent Kit that provides enterprise-grade cryptocurrency price data, historical analytics, and market statistics using Chainlink smart contracts on the Hedera network.
+A comprehensive Chainlink oracle plugin for Hedera Agent Kit that provides enterprise-grade cryptocurrency price data, historical analytics, market statistics, Proof of Reserve verification, CCIP tracking, and business metrics using Chainlink smart contracts on the Hedera network.
 
 ## 🚀 **Version 2.1.0 - Enterprise Edition**
 
@@ -10,7 +10,10 @@ A comprehensive Chainlink oracle plugin for Hedera Agent Kit that provides enter
 - 🌐 **Dual Network Support**: Works on both Hedera mainnet and testnet  
 - 🔄 **Intelligent Fallback**: Multi-layer fallback system (Smart Contract → CoinGecko API)
 - 💰 **Multiple Assets**: Supports HBAR, BTC, ETH, USDC, USDT, DAI, and LINK
-- 📊 **4 Comprehensive Tools**: Real-time prices, historical data, batch processing, market analytics
+- 📊 **7 Comprehensive Tools**: Oracle tools + Enterprise actions
+- 🔒 **Proof of Reserve**: Verify asset custody and reserves
+- 🌐 **CCIP Tracking**: Cross-chain message status monitoring
+- 🏢 **Enterprise Metrics**: FX rates and shipment tracking
 - 🏗️ **Professional Build**: TypeScript, dual exports (CJS/ESM), source maps
 - 🎯 **Context Integration**: Ready for Hedera Agent Kit v3.4.0+
 - ⚡ **Production Ready**: Enterprise-grade error handling and testing
@@ -125,9 +128,11 @@ const result = await agent.run('chainlink_get_crypto_price', {
    HEDERA_PRIVATE_KEY=YOUR_MAINNET_PRIVATE_KEY
    ```
 
-## 🛠️ **Available Tools (4 Total)**
+## 🛠️ **Available Tools & Actions (7 Total)**
 
-### 1. `chainlink_get_crypto_price` - Real-time Price Oracle
+### **📊 Oracle Tools (4 tools)**
+
+#### 1. `chainlink_get_crypto_price` - Real-time Price Oracle
 
 Fetches live cryptocurrency prices using Chainlink smart contracts with intelligent fallback.
 
@@ -144,7 +149,7 @@ const price = await agent.run('chainlink_get_crypto_price', {
 // Returns: { base: 'HBAR', quote: 'USD', price: 0.284156, source: 'chainlink-hedera-sc', ... }
 ```
 
-### 2. `chainlink_get_historical_price` - Historical Price Data
+#### 2. `chainlink_get_historical_price` - Historical Price Data
 
 Retrieves historical cryptocurrency prices for any specific date.
 
@@ -163,7 +168,7 @@ const historicalPrice = await agent.run('chainlink_get_historical_price', {
 // Returns: { base: 'BTC', quote: 'USD', price: 42150.23, date: '2024-01-01', ... }
 ```
 
-### 3. `chainlink_get_multiple_prices` - Batch Price Processing
+#### 3. `chainlink_get_multiple_prices` - Batch Price Processing
 
 Fetches multiple trading pairs in a single efficient request with batch processing.
 
@@ -182,7 +187,7 @@ const multiPrices = await agent.run('chainlink_get_multiple_prices', {
 // Returns: { results: [...], totalRequested: 3, successCount: 3, errorCount: 0, ... }
 ```
 
-### 4. `chainlink_get_price_statistics` - Market Analytics
+#### 4. `chainlink_get_price_statistics` - Market Analytics
 
 Provides comprehensive market statistics including price changes, volume, and market cap.
 
@@ -200,27 +205,98 @@ const stats = await agent.run('chainlink_get_price_statistics', {
 // Returns: { currentPrice: 2340.56, priceChanges: { "24h": 2.4, "7d": -1.2 }, volume24h: 8500000000, ... }
 ```
 
+### **🏢 Enterprise Actions (3 actions)**
+
+#### 5. `check_proof_of_reserve` - Proof of Reserve Verification
+
+Verifies asset reserves held by custodians using Chainlink Proof of Reserve feeds.
+
+**Parameters:**
+- `feedAddress` (string): Chainlink PoR feed contract address (0x...)
+
+**Example Usage:**
+```typescript
+const porData = await agent.run('check_proof_of_reserve', {
+  feedAddress: '0xAF685FB45C12b92b5054ccb9313e135525F9b5d5'
+});
+// Returns: { reserves: { value: 21000.456789, decimals: 8 }, status: 'RESERVES_CONFIRMED', ... }
+```
+
+**Real-world Applications:**
+- Verify WBTC Bitcoin reserves
+- Audit USDC USD backing
+- Monitor exchange custody holdings
+
+#### 6. `get_ccip_message_status` - CCIP Cross-Chain Tracking
+
+Tracks Chainlink CCIP cross-chain message status by monitoring blockchain events.
+
+**Parameters:**
+- `routerAddress` (string): CCIP Router contract address (0x...)
+- `messageId` (string): CCIP message ID (0x... 32-byte hex)
+- `fromBlock` (number, optional): Starting block for event search
+
+**Example Usage:**
+```typescript
+const ccipStatus = await agent.run('get_ccip_message_status', {
+  routerAddress: '0x1234567890123456789012345678901234567890',
+  messageId: '0x1234567890123456789012345678901234567890123456789012345678901234'
+});
+// Returns: { status: 'EXECUTED', sourceChain: 'Ethereum', destinationChain: 'Hedera', ... }
+```
+
+**CCIP Status Codes:**
+- `SENT`: Message submitted to source chain
+- `IN_PROGRESS`: Being processed by CCIP infrastructure
+- `EXECUTED`: Successfully delivered on destination chain
+- `FAILED`: Execution failed
+
+#### 7. `fetch_enterprise_metric` - Business Metrics API
+
+Fetches enterprise business metrics via HTTP APIs for operational data.
+
+**Parameters:**
+- `type` (string): Metric type ('fx' for foreign exchange, 'shipment' for logistics)
+- `id` (string): Metric identifier (currency pair or tracking number)
+
+**Example Usage:**
+
+**Foreign Exchange Rates:**
+```typescript
+const fxRate = await agent.run('fetch_enterprise_metric', {
+  type: 'fx',
+  id: 'USD/EUR'
+});
+// Returns: { currencyPair: 'USD/EUR', rate: 0.924156, inverseRate: 1.082134, ... }
+```
+
+**Shipment Tracking:**
+```typescript
+const shipment = await agent.run('fetch_enterprise_metric', {
+  type: 'shipment',
+  id: 'TRK123456789'
+});
+// Returns: { trackingNumber: 'TRK123456789', status: 'in_transit', carrier: 'UPS', ... }
+```
+
 ## 🏗️ **Professional Architecture**
 
 ### Project Structure
 ```
 src/
-├── index.ts                    # Main plugin export
-└── tools/
-    └── chainlink/
-        ├── get-crypto-price.ts         # Real-time prices
-        ├── get-historical-price.ts     # Historical data
-        ├── get-multiple-prices.ts      # Batch processing
-        ├── get-price-statistics.ts     # Market analytics
-        └── feeds.ts                    # Configuration
+├── index.ts                           # Main plugin export
+├── tools/
+│   └── chainlink/
+│       ├── get-crypto-price.ts        # Real-time prices
+│       ├── get-historical-price.ts    # Historical data
+│       ├── get-multiple-prices.ts     # Batch processing
+│       ├── get-price-statistics.ts    # Market analytics
+│       └── feeds.ts                   # Configuration
+└── actions/
+    ├── check-proof-of-reserve.ts      # PoR verification
+    ├── get-ccip-message-status.ts     # CCIP tracking
+    └── fetch-enterprise-metric.ts     # Business metrics
 ```
-
-### Build System
-- **TypeScript**: Full type safety and IntelliSense
-- **tsup**: Professional build with dual package exports
-- **Dual Exports**: Both CommonJS and ES Modules supported
-- **Source Maps**: Full debugging support
-- **Minification**: Optimized production bundles
 
 ## 🔧 **Development**
 
@@ -233,22 +309,24 @@ npm run lint         # TypeScript type checking
 
 ### Testing
 ```bash
-npm run test         # Run basic tests
-node enhanced-test.js # Comprehensive test suite
+npm run test                    # Basic tests
+node enhanced-test.js          # Comprehensive test suite (all 7 tools)
+node comprehensive-test.js     # Full integration testing
+node por-ccip-demo.js         # PoR & CCIP demonstration
 ```
 
-### Environment Setup
-1. Copy environment file:
-   ```bash
-   cp .env.example .env
-   ```
+### Tool Reference
 
-2. Configure credentials:
-   ```env
-   HEDERA_NETWORK=testnet
-   HEDERA_ACCOUNT_ID=0.0.YOUR_ACCOUNT
-   HEDERA_PRIVATE_KEY=YOUR_PRIVATE_KEY
-   ```
+#### Oracle Tools
+- `chainlink_get_crypto_price` - Real-time price fetching
+- `chainlink_get_historical_price` - Historical price data
+- `chainlink_get_multiple_prices` - Batch price processing  
+- `chainlink_get_price_statistics` - Market analytics
+
+#### Enterprise Actions
+- `check_proof_of_reserve` - Asset reserve verification
+- `get_ccip_message_status` - Cross-chain message tracking
+- `fetch_enterprise_metric` - Business metrics (FX/shipment)
 
 ## 📊 **Error Handling & Reliability**
 
@@ -263,11 +341,33 @@ The plugin features industry-leading error handling:
 ## 🎯 **Production Features**
 
 - **Enterprise Grade**: Professional packaging and build system
+- **7 Comprehensive Tools**: Complete Chainlink ecosystem coverage
+- **Multi-Network Support**: Testnet and mainnet compatibility
 - **Context Integration**: Ready for latest Hedera Agent Kit versions
 - **Type Safety**: Full TypeScript implementation with strict types
-- **Performance**: Optimized for high-frequency trading applications
+- **Performance**: Optimized for high-frequency operations
 - **Monitoring**: Built-in diagnostics and health checking
-- **Scalability**: Efficient batch processing for multiple pairs
+- **Scalability**: Efficient batch processing and enterprise APIs
+- **Cross-Chain**: CCIP integration for multi-blockchain operations
+
+## 📊 **Use Cases**
+
+### Financial Services
+- Real-time cryptocurrency pricing
+- Historical price analysis
+- Market statistics and analytics
+- Asset reserve auditing (PoR)
+
+### Cross-Chain Operations  
+- Multi-blockchain transfers
+- Cross-chain message tracking
+- Interoperability monitoring
+
+### Enterprise Operations
+- Foreign exchange rate monitoring
+- Supply chain tracking
+- Business metric collection
+- Operational data integration
 
 ## License
 

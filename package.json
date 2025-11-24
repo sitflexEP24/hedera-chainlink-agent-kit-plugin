@@ -1,7 +1,7 @@
 {
   "name": "@fermindietze/hedera-chainlink-agent-kit-plugin",
   "version": "2.1.0",
-  "description": "A Chainlink price oracle plugin for Hedera Agent Kit - Fetch cryptocurrency prices using Chainlink smart contracts on Hedera network",
+  "description": "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -47,7 +47,12 @@
     "web3",
     "defi",
     "price-feeds",
-    "smart-contracts"
+    "smart-contracts",
+    "proof-of-reserve",
+    "ccip",
+    "cross-chain",
+    "enterprise",
+    "business-metrics"
   ],
   "author": "Fermin Dietze",
   "license": "MIT",

@@ -15,6 +15,18 @@ import {
   getPriceStatisticsTool,
   CHAINLINK_GET_PRICE_STATISTICS,
 } from "./tools/chainlink/get-price-statistics.js";
+import {
+  checkProofOfReserveTool,
+  CHECK_PROOF_OF_RESERVE,
+} from "./actions/check-proof-of-reserve.js";
+import {
+  getCcipMessageStatusTool,
+  GET_CCIP_MESSAGE_STATUS,
+} from "./actions/get-ccip-message-status.js";
+import {
+  fetchEnterpriseMetricTool,
+  FETCH_ENTERPRISE_METRIC,
+} from "./actions/fetch-enterprise-metric.js";
 
 // Type definitions for forward compatibility
 interface Context {
@@ -31,31 +43,42 @@ interface Plugin {
   tools: (context?: Context) => any[];
 }
 
-// Export the enhanced plugin with context integration
+// Export the comprehensive plugin with all tools and actions
 export const chainlinkOraclePlugin: Plugin = {
   name: "chainlink-oracle-plugin",
   version: "2.1.0",
-  description: "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, and multi-pair fetching using Chainlink smart contracts",
+  description: "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, multi-pair fetching, Proof of Reserve, CCIP tracking, and enterprise metrics",
   author: "Fermin Dietze",
-  tags: ["oracle", "chainlink", "price-feeds", "defi", "smart-contracts", "historical-data", "statistics"],
+  tags: ["oracle", "chainlink", "price-feeds", "defi", "smart-contracts", "historical-data", "statistics", "proof-of-reserve", "ccip", "enterprise"],
   tools: (context?: Context) => [
+    // Oracle Tools
     getCryptoPriceTool,
     getHistoricalPriceTool,
     getMultiplePricesTool,
     getPriceStatisticsTool,
+    // Enterprise Actions
+    checkProofOfReserveTool,
+    getCcipMessageStatusTool,
+    fetchEnterpriseMetricTool,
   ],
 };
 
 // Export tool names for external reference
 export const chainlinkOraclePluginToolNames = {
+  // Oracle Tools
   CHAINLINK_GET_CRYPTO_PRICE,
   CHAINLINK_GET_HISTORICAL_PRICE,
   CHAINLINK_GET_MULTIPLE_PRICES,
   CHAINLINK_GET_PRICE_STATISTICS,
+  // Enterprise Actions
+  CHECK_PROOF_OF_RESERVE,
+  GET_CCIP_MESSAGE_STATUS,
+  FETCH_ENTERPRISE_METRIC,
 } as const;
 
-// Export individual tools for direct usage
+// Export individual tools and actions for direct usage
 export {
+  // Oracle Tools
   getCryptoPriceTool,
   getHistoricalPriceTool,
   getMultiplePricesTool,
@@ -64,6 +87,13 @@ export {
   CHAINLINK_GET_HISTORICAL_PRICE,
   CHAINLINK_GET_MULTIPLE_PRICES,
   CHAINLINK_GET_PRICE_STATISTICS,
+  // Enterprise Actions
+  checkProofOfReserveTool,
+  getCcipMessageStatusTool,
+  fetchEnterpriseMetricTool,
+  CHECK_PROOF_OF_RESERVE,
+  GET_CCIP_MESSAGE_STATUS,
+  FETCH_ENTERPRISE_METRIC,
 };
 
 export default { chainlinkOraclePlugin, chainlinkOraclePluginToolNames };

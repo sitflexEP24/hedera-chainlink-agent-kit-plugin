@@ -2,37 +2,8 @@
 import { z } from "zod";
 import { Client, ContractCallQuery, ContractId } from "@hashgraph/sdk";
 import { ethers } from "ethers";
-
-// Chainlink AggregatorV3Interface ABI
-const AGGREGATOR_V3_INTERFACE_ABI = [
-  {
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "description",
-    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "latestRoundData",
-    "outputs": [
-      {"internalType": "uint80", "name": "roundId", "type": "uint80"},
-      {"internalType": "int256", "name": "answer", "type": "int256"},
-      {"internalType": "uint256", "name": "startedAt", "type": "uint256"},
-      {"internalType": "uint256", "name": "updatedAt", "type": "uint256"},
-      {"internalType": "uint80", "name": "answeredInRound", "type": "uint80"}
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+import { detectNetwork } from "../../utils/network-detector.js";
+import { AGGREGATOR_V3_INTERFACE_ABI } from "../../constants/chainlink-abis.js";
 
 // Chainlink Price Feed Contracts on Hedera Networks
 const PRICE_FEED_CONTRACTS = {
@@ -111,23 +82,9 @@ export async function getCryptoPriceExecute(
 ) {
   const pair = `${params.base}/${params.quote}`;
   
-  // Better network detection - check the client's network configuration
-  let network: 'testnet' | 'mainnet' = 'testnet';
-  try {
-    if (client) {
-      // Check if client has network property or use a more reliable method
-      const clientStr = client.toString();
-      if (clientStr.includes('mainnet') || clientStr.includes('295629')) { // 295629 is mainnet chain ID
-        network = 'mainnet';
-      } else if (clientStr.includes('testnet') || clientStr.includes('296')) { // 296 is testnet chain ID
-        network = 'testnet';
-      }
-    }
-    // Default to testnet if detection fails or client is null
-  } catch (error) {
-    console.warn('Network detection failed, defaulting to testnet:', error);
-    network = 'testnet';
-  }
+  // Use centralized network detection
+  const networkConfig = detectNetwork(client);
+  const { network } = networkConfig;
   
   console.log(`Using ${network} network for Chainlink price feed`);
   
