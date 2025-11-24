@@ -1,0 +1,53 @@
+{
+  "name": "hedera-chainlink-agent-kit-plugin",
+  "version": "2.0.0",
+  "description": "A Chainlink price oracle plugin for Hedera Agent Kit - Fetch cryptocurrency prices using Chainlink smart contracts on Hedera network",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "test": "node test.js",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sitflexEP24/hedera-chainlink-agent-kit-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sitflexEP24/hedera-chainlink-agent-kit-plugin/issues"
+  },
+  "homepage": "https://github.com/sitflexEP24/hedera-chainlink-agent-kit-plugin#readme",
+  "keywords": [
+    "hedera",
+    "agent-kit",
+    "plugin",
+    "chainlink",
+    "oracle",
+    "hbar",
+    "web3",
+    "defi",
+    "price-feeds",
+    "smart-contracts"
+  ],
+  "author": "Fermin Dietze",
+  "license": "MIT",
+  "peerDependencies": {
+    "hedera-agent-kit": "^1.0.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.77.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.15.0",
+    "zod": "^3.25.76"
+  }
+}
