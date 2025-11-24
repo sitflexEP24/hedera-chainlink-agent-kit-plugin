@@ -2,21 +2,21 @@
 
 A comprehensive Chainlink oracle plugin for Hedera Agent Kit that provides enterprise-grade cryptocurrency price data, historical analytics, market statistics, Proof of Reserve verification, CCIP tracking, and business metrics using Chainlink smart contracts on the Hedera network.
 
-## 🚀 **Version 2.1.0 - Enterprise Edition**
+## **Version 2.1.0 - Enterprise Edition**
 
 ### **Enhanced Features**
 
-- 🔗 **Smart Contract Integration**: Direct access to Chainlink price feeds on Hedera
-- 🌐 **Dual Network Support**: Works on both Hedera mainnet and testnet  
-- 🔄 **Intelligent Fallback**: Multi-layer fallback system (Smart Contract → CoinGecko API)
-- 💰 **Multiple Assets**: Supports HBAR, BTC, ETH, USDC, USDT, DAI, and LINK
-- 📊 **7 Comprehensive Tools**: Oracle tools + Enterprise actions
-- 🔒 **Proof of Reserve**: Verify asset custody and reserves
-- 🌐 **CCIP Tracking**: Cross-chain message status monitoring
-- 🏢 **Enterprise Metrics**: FX rates and shipment tracking
-- 🏗️ **Professional Build**: TypeScript, dual exports (CJS/ESM), source maps
-- 🎯 **Context Integration**: Ready for Hedera Agent Kit v3.4.0+
-- ⚡ **Production Ready**: Enterprise-grade error handling and testing
+- **Smart Contract Integration**: Direct access to Chainlink price feeds on Hedera
+- **Dual Network Support**: Works on both Hedera mainnet and testnet  
+- **Intelligent Fallback**: Multi-layer fallback system (Smart Contract → CoinGecko API)
+- **Multiple Assets**: Supports HBAR, BTC, ETH, USDC, USDT, DAI, and LINK
+- **7 Comprehensive Tools**: Oracle tools + Enterprise actions
+- **Proof of Reserve**: Verify asset custody and reserves
+- **CCIP Tracking**: Cross-chain message status monitoring
+- **Enterprise Metrics**: FX rates and shipment tracking
+- **Professional Build**: TypeScript, dual exports (CJS/ESM), source maps
+- **Context Integration**: Ready for Hedera Agent Kit v3.4.0+
+- **Production Ready**: Enterprise-grade error handling and testing
 
 ## Installation
 
