@@ -1,5 +1,5 @@
 // src/index.ts
-import { Plugin, PluginContext } from "./types/plugin.js";
+import { Plugin, Context } from "./types/plugin.js";
 import { getCryptoPriceTool, CHAINLINK_GET_CRYPTO_PRICE } from "./tools/chainlink/get-crypto-price.js";
 import { getHistoricalPriceTool, CHAINLINK_GET_HISTORICAL_PRICE } from "./tools/chainlink/get-historical-price.js";
 import { getMultiplePricesTool, CHAINLINK_GET_MULTIPLE_PRICES } from "./tools/chainlink/get-multiple-prices.js";
@@ -14,7 +14,7 @@ export const chainlinkOraclePlugin: Plugin = {
   description: "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit with real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics",
   author: "Fermin Dietze",
   tags: ["oracle", "chainlink", "price-feeds", "defi", "smart-contracts", "proof-of-reserve", "ccip", "enterprise"],
-  tools: (context?: PluginContext) => [
+  tools: (context?: Context) => [
     // Oracle Tools
     getCryptoPriceTool,
     getHistoricalPriceTool,

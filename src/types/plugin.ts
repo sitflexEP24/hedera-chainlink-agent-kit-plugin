@@ -1,8 +1,10 @@
 // src/types/plugin.ts
 import { Client } from "@hashgraph/sdk";
 
-export interface PluginContext {
-  mode?: 'autonomous' | 'return_bytes';
+// Use hedera-agent-kit's expected context interface
+export interface Context {
+  mode?: string;
+  accountId?: string;
   [key: string]: any;
 }
 
@@ -20,7 +22,7 @@ export interface Plugin {
   description: string;
   author?: string;
   tags?: string[];
-  tools: (context?: PluginContext) => Tool[];
+  tools: (context?: Context) => Tool[];
 }
 
 export interface OperationResult {
