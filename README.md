@@ -322,35 +322,242 @@ src/
 - **Source Maps**: Full debugging support
 - **Minification**: Production-ready optimized bundles
 
-## 🔧 **Development**
+## 🤖 **AI Agent Integration Instructions**
 
-### Building
-```bash
-npm run build        # Production build
-npm run dev          # Development with watch mode
-npm run lint         # TypeScript type checking
+### **For AI Agents: How to Present Transparency Information**
+
+When using this plugin, AI agents should **always explain the blockchain operation details** to users. The plugin provides rich transparency information that should be presented clearly:
+
+```typescript
+// ✅ GOOD: Always explain transparency details
+const result = await agent.run('chainlink_get_crypto_price', { base: 'HBAR', quote: 'USD' });
+
+// Present to user like this:
+console.log(`HBAR Price: $${result.price}`);
+console.log(`\n🔍 Blockchain Operation Details:`);
+console.log(`• Operation Type: ${result.blockchainOperation.type}`);
+console.log(`• Network: ${result.blockchainOperation.network}`);
+if (result.blockchainOperation.contractAddress) {
+  console.log(`• Smart Contract: ${result.blockchainOperation.contractAddress}`);
+  console.log(`• Verify on HashScan: ${result.blockchainOperation.verificationUrl}`);
+}
+if (result.blockchainOperation.hbarFee) {
+  console.log(`• HBAR Fee: ${result.blockchainOperation.hbarFee} HBAR`);
+}
+console.log(`• Timestamp: ${result.blockchainOperation.timestamp}`);
 ```
 
-### Testing
-```bash
-npm run test                    # Basic tests
-node enhanced-test.js          # Comprehensive test suite (all 7 tools)
-node comprehensive-test.js     # Full integration testing
-node por-ccip-demo.js         # PoR & CCIP demonstration
+### **Required AI Agent Behavior**
+
+AI agents MUST inform users about:
+
+1. **Operation Costs**: Always mention HBAR fees when blockchain operations occur
+2. **Verification Links**: Provide HashScan URLs for transaction verification
+3. **Data Sources**: Explain whether data came from smart contracts or APIs
+4. **Network Context**: Clarify if operations happened on testnet or mainnet
+5. **Contract Details**: Show which Chainlink oracle contracts were used
+
+### **Example AI Responses**
+
+**❌ Bad AI Response:**
+```
+"HBAR is currently priced at $0.28"
 ```
 
-### Tool Reference
+**✅ Good AI Response:**
+```
+"HBAR is currently priced at $0.284156 USD.
 
-#### Oracle Tools
-- `chainlink_get_crypto_price` - Real-time price fetching
-- `chainlink_get_historical_price` - Historical price data
-- `chainlink_get_multiple_prices` - Batch price processing  
-- `chainlink_get_price_statistics` - Market analytics
+🔍 **Operation Details:**
+• **Source**: Chainlink Smart Contract on Hedera Testnet
+• **Contract**: 0x59bC155EB6c6C415fE43255aF66EcF0523c92B4a
+• **Oracle Round**: #18446744073709552000
+• **Last Updated**: 2024-11-25 10:30:00 UTC
+• **HBAR Fee**: 0.00001 HBAR
+• **Verify**: https://hashscan.io/testnet/contract/0x59bC155EB6c6C415fE43255aF66EcF0523c92B4a
 
-#### Enterprise Actions
-- `check_proof_of_reserve` - Asset reserve verification
-- `get_ccip_message_status` - Cross-chain message tracking
-- `fetch_enterprise_metric` - Business metrics (FX/shipment)
+This price comes directly from Chainlink's decentralized oracle network, ensuring accuracy and reliability."
+```
+
+## 🔧 **Type Definitions & Developer Reference**
+
+### **Core Interfaces**
+
+The plugin provides comprehensive TypeScript definitions for all operations:
+
+```typescript
+interface OperationResult {
+  [key: string]: any;
+  blockchainOperation?: BlockchainOperation;
+}
+
+interface BlockchainOperation {
+  type: string;                           // 'chainlink_price_feed', 'api_request', etc.
+  network: 'testnet' | 'mainnet' | 'external_api';
+  timestamp: string;                      // ISO 8601 timestamp
+  contractAddress?: string;               // Smart contract address
+  transactionId?: string;                 // Hedera transaction ID
+  hbarFee?: number;                      // Cost in HBAR
+  gasUsed?: number;                      // Gas consumption
+  verificationUrl?: string;               // HashScan verification link
+  details?: Record<string, any>;          // Additional operation metadata
+}
+
+interface Tool {
+  method: string;                         // Tool identifier
+  name: string;                          // Human-readable name
+  description: string;                   // Tool description
+  parameters: ZodSchema;                 // Zod validation schema
+  execute: (client: Client, context: any, params: any) => Promise<OperationResult>;
+}
+```
+
+### **Available Tool Methods**
+
+```typescript
+// Oracle Tools
+type OracleTools = 
+  | "chainlink_get_crypto_price"      // Real-time prices
+  | "chainlink_get_historical_price"  // Historical data
+  | "chainlink_get_multiple_prices"   // Batch processing
+  | "chainlink_get_price_statistics"; // Market analytics
+
+// Enterprise Actions
+type EnterpriseActions = 
+  | "check_proof_of_reserve"          // Asset verification
+  | "get_ccip_message_status"         // Cross-chain tracking
+  | "fetch_enterprise_metric";       // Business metrics
+```
+
+### **Transparency Information Types**
+
+Every tool returns transparency information in `blockchainOperation`:
+
+```typescript
+// Smart Contract Operations
+{
+  type: "chainlink_price_feed",
+  network: "testnet",
+  contractAddress: "0x59bC155EB6c6C415fE43255aF66EcF0523c92B4a",
+  hbarFee: 0.00001,
+  gasUsed: 50000,
+  verificationUrl: "https://hashscan.io/testnet/contract/0x59bC155...",
+  details: {
+    function: "latestRoundData + decimals",
+    roundId: "18446744073709552000",
+    oracleUpdatedAt: "2024-11-25T10:30:00.000Z",
+    decimals: 8
+  }
+}
+
+// API Operations
+{
+  type: "coingecko_price_api", 
+  network: "external_api",
+  verificationUrl: "https://api.coingecko.com/api/v3/simple/price",
+  details: {
+    provider: "CoinGecko",
+    pair: "HBAR/USD",
+    reason: "chainlink_unavailable"
+  }
+}
+```
+
+## 📝 **AI Agent Prompt Examples**
+
+### **For Price Queries**
+```
+System: When fetching cryptocurrency prices, always explain:
+1. The current price with source information
+2. Whether it came from a smart contract or API fallback
+3. The HBAR cost of the operation (if applicable)
+4. How users can verify the data independently
+5. When the oracle was last updated
+
+Example:
+User: "What's the current HBAR price?"
+Assistant: "HBAR is currently $0.284156 USD.
+
+This price comes from Chainlink's oracle smart contract (0x59bC155...) on Hedera testnet. The oracle was last updated 5 minutes ago at round #18446744073709552000. 
+
+The query cost 0.00001 HBAR and you can verify this data on HashScan: [verification link]"
+```
+
+### **For Enterprise Operations**
+```
+System: When performing enterprise operations like Proof of Reserve checks, explain:
+1. What reserves are being verified and their current status
+2. Which smart contract provided the verification
+3. The meaning of the reserve status (CONFIRMED/DEPLETED)
+4. How to verify the operation independently
+
+Example:
+User: "Check if WBTC reserves are fully backed"
+Assistant: "✅ WBTC Reserves Status: FULLY BACKED
+
+📊 Current Reserves: 125,847.23485920 BTC
+🏦 Custodian: BitGo (verified via Chainlink PoR)
+📍 Contract: 0x[PoR_Contract_Address]
+📅 Last Updated: 2024-11-25 10:45:00 UTC
+
+This verification came from Chainlink's Proof of Reserve feed, which monitors BitGo's Bitcoin custody in real-time. You can verify this data independently on HashScan."
+```
+
+## 🎯 **Implementation Guidelines for Developers**
+
+### **Always Surface Transparency**
+
+```typescript
+// ❌ Don't hide transparency information
+async function badImplementation() {
+  const result = await chainlinkTool.execute(client, context, params);
+  return result.price; // Only returns price, hides transparency
+}
+
+// ✅ Always expose transparency information  
+async function goodImplementation() {
+  const result = await chainlinkTool.execute(client, context, params);
+  
+  return {
+    price: result.price,
+    transparency: {
+      source: result.source,
+      operation: result.blockchainOperation,
+      verificationUrl: result.blockchainOperation?.verificationUrl
+    }
+  };
+}
+```
+
+### **User-Friendly Transparency Display**
+
+```typescript
+function formatTransparencyForUsers(operation: BlockchainOperation): string {
+  const parts = [];
+  
+  if (operation.network !== 'external_api') {
+    parts.push(`🌐 Network: Hedera ${operation.network}`);
+  }
+  
+  if (operation.contractAddress) {
+    parts.push(`📍 Smart Contract: ${operation.contractAddress}`);
+  }
+  
+  if (operation.hbarFee) {
+    parts.push(`💰 HBAR Fee: ${operation.hbarFee} HBAR`);
+  }
+  
+  if (operation.verificationUrl) {
+    parts.push(`🔍 Verify: ${operation.verificationUrl}`);
+  }
+  
+  if (operation.details?.roundId) {
+    parts.push(`🔄 Oracle Round: #${operation.details.roundId}`);
+  }
+  
+  return parts.join('\n');
+}
+```
 
 ## 📊 **Error Handling & Reliability**
 
