@@ -9,25 +9,24 @@ import { getCcipMessageStatusTool, GET_CCIP_MESSAGE_STATUS } from "./actions/get
 import { fetchEnterpriseMetricTool, FETCH_ENTERPRISE_METRIC } from "./actions/fetch-enterprise-metric.js";
 
 export const chainlinkOraclePlugin: Plugin = {
-  name: "chainlink-oracle-plugin",
+  name: "hedera-chainlink-oracle",
   version: "2.2.0",
-  description: "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit with real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics",
+  description: "Chainlink Oracle Plugin for Hedera Agent Kit with real-time prices, historical data, Proof of Reserve verification, CCIP tracking, and enterprise metrics",
   author: "Fermin Dietze",
-  tags: ["oracle", "chainlink", "price-feeds", "defi", "smart-contracts", "proof-of-reserve", "ccip", "enterprise"],
+  tags: ["oracle", "chainlink", "price-feeds", "defi", "smart-contracts"],
   tools: (context?: Context) => [
-    // Oracle Tools
     getCryptoPriceTool,
     getHistoricalPriceTool,
     getMultiplePricesTool,
     getPriceStatisticsTool,
-    // Enterprise Actions
     checkProofOfReserveTool,
     getCcipMessageStatusTool,
     fetchEnterpriseMetricTool,
   ],
 };
 
-export const toolNames = {
+// Tool method constants for external usage
+export const TOOL_METHODS = {
   CHAINLINK_GET_CRYPTO_PRICE,
   CHAINLINK_GET_HISTORICAL_PRICE,
   CHAINLINK_GET_MULTIPLE_PRICES,
@@ -37,7 +36,7 @@ export const toolNames = {
   FETCH_ENTERPRISE_METRIC,
 } as const;
 
-// Individual exports for direct usage
+// Individual tool exports for direct usage
 export {
   getCryptoPriceTool,
   getHistoricalPriceTool,
@@ -46,13 +45,9 @@ export {
   checkProofOfReserveTool,
   getCcipMessageStatusTool,
   fetchEnterpriseMetricTool,
-  CHAINLINK_GET_CRYPTO_PRICE,
-  CHAINLINK_GET_HISTORICAL_PRICE,
-  CHAINLINK_GET_MULTIPLE_PRICES,
-  CHAINLINK_GET_PRICE_STATISTICS,
-  CHECK_PROOF_OF_RESERVE,
-  GET_CCIP_MESSAGE_STATUS,
-  FETCH_ENTERPRISE_METRIC,
 };
+
+// Type exports for developers
+export type { Plugin, Context, Tool, OperationResult, BlockchainOperation } from "./types/plugin.js";
 
 export default chainlinkOraclePlugin;

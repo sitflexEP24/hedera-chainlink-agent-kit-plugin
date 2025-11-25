@@ -1,7 +1,7 @@
 // run-agent.ts
 import 'dotenv/config';
 import { Client, AccountId, PrivateKey } from "@hashgraph/sdk";
-import { chainlinkOraclePlugin } from "./index.js";
+import { chainlinkOraclePlugin } from "./dist/index.js";
 
 async function main() {
   // Load credentials from environment variables

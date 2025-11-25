@@ -18,29 +18,36 @@ export function createTransparencyInfo(
     timestamp: new Date().toISOString(),
   };
 
-  // Add contract info
+  // Add contract info if available
   if (contractAddress) {
     operation.contractAddress = contractAddress;
     operation.verificationUrl = `https://hashscan.io/${networkConfig.network}/contract/${contractAddress}`;
   }
 
-  // Add transaction details
+  // Add transaction details if available
   if (transactionResult?.transactionId) {
     operation.transactionId = transactionResult.transactionId.toString();
     operation.verificationUrl = `https://hashscan.io/${networkConfig.network}/transaction/${operation.transactionId}`;
   }
 
+  // Calculate HBAR fees safely
   if (transactionResult?.transactionFee) {
-    operation.hbarFee = Number(transactionResult.transactionFee.toTinybars()) / 100000000;
+    try {
+      const feeInTinybars = transactionResult.transactionFee.toTinybars();
+      operation.hbarFee = Number(feeInTinybars) / 100_000_000; // Convert tinybars to HBAR
+    } catch (error) {
+      // Fee calculation failed, omit from result
+    }
   }
 
+  // Add gas usage if available
   if (transactionResult?.gasUsed) {
     operation.gasUsed = Number(transactionResult.gasUsed.toString());
   }
 
-  // Add custom details
+  // Add operation details
   if (details) {
-    operation.details = details;
+    operation.details = { ...details }; // Shallow copy to prevent mutation
   }
 
   return operation;

@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import { detectNetwork } from "../../utils/network-detector.js";
 import { AGGREGATOR_V3_INTERFACE_ABI } from "../../constants/chainlink-abis.js";
 import { createTransparencyInfo, createAPITransparencyInfo } from "../../utils/transparency.js";
-import { Tool, OperationResult } from "../../types/plugin.js";
+import { Tool, OperationResult, Context } from "../../types/plugin.js";
 
 const PRICE_FEEDS = {
   mainnet: {
@@ -38,6 +38,28 @@ const COINGECKO_IDS = {
   LINK: 'chainlink'
 } as const;
 
+// Enhanced input validation
+function validateAssetPair(base: string, quote: string): void {
+  const allowedAssets = Object.keys(COINGECKO_IDS);
+  const allowedQuotes = ['USD', 'EUR']; // Restrict supported quotes
+  
+  if (!allowedAssets.includes(base.toUpperCase())) {
+    throw new Error(`Unsupported base asset: ${base}. Supported: ${allowedAssets.join(', ')}`);
+  }
+  
+  if (!allowedQuotes.includes(quote.toUpperCase())) {
+    throw new Error(`Unsupported quote currency: ${quote}. Supported: ${allowedQuotes.join(', ')}`);
+  }
+}
+
+// Enhanced address validation
+function validateContractAddress(address: string): boolean {
+  if (!address || typeof address !== 'string') return false;
+  if (!address.startsWith("0x") || address.length !== 42) return false;
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return false;
+  return ethers.isAddress(address);
+}
+
 async function fetchCoinGeckoPrice(base: string, quote: string): Promise<number> {
   const baseId = COINGECKO_IDS[base.toUpperCase() as keyof typeof COINGECKO_IDS];
   if (!baseId) {
@@ -45,20 +67,33 @@ async function fetchCoinGeckoPrice(base: string, quote: string): Promise<number>
   }
   
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${baseId}&vs_currencies=${quote.toLowerCase()}`;
-  const response = await fetch(url);
   
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+      headers: {
+        'User-Agent': 'HederaChainlinkPlugin/2.2.0'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const price = data[baseId]?.[quote.toLowerCase()];
+    
+    if (typeof price !== 'number' || price <= 0) {
+      throw new Error(`Invalid price data received for ${base}/${quote}`);
+    }
+    
+    return price;
+  } catch (error: any) {
+    if (error.name === 'TimeoutError') {
+      throw new Error('Price API request timed out');
+    }
+    throw new Error(`Price API error: ${error.message}`);
   }
-  
-  const data = await response.json();
-  const price = data[baseId]?.[quote.toLowerCase()];
-  
-  if (!price) {
-    throw new Error(`Price not found for ${base}/${quote}`);
-  }
-  
-  return price;
 }
 
 async function fetchChainlinkPrice(
@@ -67,67 +102,101 @@ async function fetchChainlinkPrice(
   base: string, 
   quote: string
 ): Promise<{ price: number; roundId: string; updatedAt: string; decimals: number; result: any }> {
+  // Validate contract address
+  if (!validateContractAddress(contractAddress)) {
+    throw new Error('Invalid contract address format');
+  }
+
   const contractInterface = new ethers.Interface(AGGREGATOR_V3_INTERFACE_ABI);
-  const contractId = contractAddress.startsWith("0x") 
-    ? ContractId.fromEvmAddress(0, 0, contractAddress)
-    : ContractId.fromString(contractAddress);
+  const contractId = ContractId.fromEvmAddress(0, 0, contractAddress);
 
-  // Get latest round data
-  const latestRoundQuery = new ContractCallQuery()
-    .setContractId(contractId)
-    .setGas(100000)
-    .setFunctionParameters(Buffer.from(
-      contractInterface.encodeFunctionData("latestRoundData").slice(2), 
-      "hex"
-    ));
+  try {
+    // Get latest round data with proper error handling
+    const latestRoundQuery = new ContractCallQuery()
+      .setContractId(contractId)
+      .setGas(150000) // Increased gas limit for safety
+      .setFunctionParameters(Buffer.from(
+        contractInterface.encodeFunctionData("latestRoundData").slice(2), 
+        "hex"
+      ));
 
-  const roundResult = await latestRoundQuery.execute(client);
-  const [roundId, answer, startedAt, updatedAt] = contractInterface.decodeFunctionResult(
-    "latestRoundData", 
-    roundResult.bytes
-  );
+    const roundResult = await latestRoundQuery.execute(client);
+    const [roundId, answer, startedAt, updatedAt] = contractInterface.decodeFunctionResult(
+      "latestRoundData", 
+      roundResult.bytes
+    );
 
-  // Get decimals
-  const decimalsQuery = new ContractCallQuery()
-    .setContractId(contractId)
-    .setGas(50000)
-    .setFunctionParameters(Buffer.from(
-      contractInterface.encodeFunctionData("decimals").slice(2), 
-      "hex"
-    ));
+    // Get decimals with separate query
+    const decimalsQuery = new ContractCallQuery()
+      .setContractId(contractId)
+      .setGas(50000)
+      .setFunctionParameters(Buffer.from(
+        contractInterface.encodeFunctionData("decimals").slice(2), 
+        "hex"
+      ));
 
-  const decimalsResult = await decimalsQuery.execute(client);
-  const [decimalsValue] = contractInterface.decodeFunctionResult("decimals", decimalsResult.bytes);
-  const decimals = parseInt(decimalsValue.toString());
+    const decimalsResult = await decimalsQuery.execute(client);
+    const [decimalsValue] = contractInterface.decodeFunctionResult("decimals", decimalsResult.bytes);
+    const decimals = parseInt(decimalsValue.toString());
 
-  const price = Number(answer.toString()) / Math.pow(10, decimals);
+    // Validate oracle data
+    const rawPrice = Number(answer.toString());
+    if (rawPrice <= 0 || decimals < 0 || decimals > 18) {
+      throw new Error('Invalid oracle data received');
+    }
 
-  return {
-    price,
-    roundId: roundId.toString(),
-    updatedAt: new Date(parseInt(updatedAt.toString()) * 1000).toISOString(),
-    decimals,
-    result: roundResult
-  };
+    const price = rawPrice / Math.pow(10, decimals);
+    
+    // Sanity check on price
+    if (price <= 0 || price > 1000000) { // Basic sanity bounds
+      throw new Error('Price data outside reasonable bounds');
+    }
+
+    return {
+      price,
+      roundId: roundId.toString(),
+      updatedAt: new Date(parseInt(updatedAt.toString()) * 1000).toISOString(),
+      decimals,
+      result: roundResult
+    };
+  } catch (error: any) {
+    // Sanitized error messages
+    if (error.message.includes('CONTRACT_REVERT')) {
+      throw new Error('Smart contract call failed');
+    } else if (error.message.includes('INSUFFICIENT_GAS')) {
+      throw new Error('Insufficient gas for contract call');
+    } else {
+      throw new Error('Blockchain query failed');
+    }
+  }
 }
 
 const parameters = z.object({
-  base: z.string().describe("Base symbol (e.g. BTC, ETH, HBAR)"),
-  quote: z.string().describe("Quote currency (e.g. USD)"),
+  base: z.string()
+    .min(2)
+    .max(10)
+    .regex(/^[A-Z]+$/i)
+    .describe("Base symbol (e.g. BTC, ETH, HBAR)"),
+  quote: z.string()
+    .min(2)
+    .max(10)
+    .regex(/^[A-Z]+$/i)
+    .describe("Quote currency (e.g. USD)"),
 });
 
-async function execute(client: Client, context: any, params: z.infer<typeof parameters>): Promise<OperationResult> {
+async function execute(client: Client, context: Context, params: z.infer<typeof parameters>): Promise<OperationResult> {
+  // Validate inputs
   const { base, quote } = params;
-  const pair = `${base}/${quote}`;
-  const networkConfig = detectNetwork(client);
+  validateAssetPair(base, quote);
   
-  console.log(`Fetching ${pair} price on ${networkConfig.network}`);
+  const pair = `${base.toUpperCase()}/${quote.toUpperCase()}`;
+  const networkConfig = detectNetwork(client);
 
   // Try Chainlink smart contract first if client is available
   if (client) {
     const contractAddress = PRICE_FEEDS[networkConfig.network]?.[pair as keyof typeof PRICE_FEEDS[typeof networkConfig.network]];
     
-    if (contractAddress && !contractAddress.includes('XXXXXXX')) {
+    if (contractAddress) {
       try {
         const chainlinkData = await fetchChainlinkPrice(client, contractAddress, base, quote);
         const transparency = createTransparencyInfo(
@@ -157,7 +226,7 @@ async function execute(client: Client, context: any, params: z.infer<typeof para
           blockchainOperation: transparency
         };
       } catch (error: any) {
-        console.warn(`Chainlink contract call failed: ${error.message}`);
+        console.warn(`Chainlink contract query failed for ${pair}`);
       }
     }
   }
@@ -184,7 +253,7 @@ async function execute(client: Client, context: any, params: z.infer<typeof para
       blockchainOperation: transparency
     };
   } catch (error: any) {
-    throw new Error(`All price sources failed: ${error.message}`);
+    throw new Error('All price sources are currently unavailable');
   }
 }
 

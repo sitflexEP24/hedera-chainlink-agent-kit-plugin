@@ -1,10 +1,12 @@
 // src/types/plugin.ts
 import { Client } from "@hashgraph/sdk";
+import { ZodSchema } from "zod";
 
-// Use hedera-agent-kit's expected context interface
+// Align with hedera-agent-kit's expected context interface
 export interface Context {
   mode?: string;
   accountId?: string;
+  network?: 'testnet' | 'mainnet';
   [key: string]: any;
 }
 
@@ -12,8 +14,8 @@ export interface Tool {
   method: string;
   name: string;
   description: string;
-  parameters: any;
-  execute: (client: Client, context: any, params: any) => Promise<any>;
+  parameters: ZodSchema;  // Changed from 'any' to ZodSchema
+  execute: (client: Client, context: Context, params: any) => Promise<OperationResult>;  // Improved typing
 }
 
 export interface Plugin {

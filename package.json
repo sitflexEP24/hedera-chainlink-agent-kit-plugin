@@ -1,7 +1,7 @@
 {
   "name": "@fermindietze/hedera-chainlink-agent-kit-plugin",
   "version": "2.2.0",
-  "description": "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics with enhanced transparency and refactored architecture",
+  "description": "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,7 +27,9 @@
     "test": "node test.js",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -50,11 +52,7 @@
     "smart-contracts",
     "proof-of-reserve",
     "ccip",
-    "cross-chain",
-    "enterprise",
-    "business-metrics",
-    "transparency",
-    "refactored"
+    "cross-chain"
   ],
   "author": "Fermin Dietze",
   "license": "MIT",
@@ -62,12 +60,12 @@
     "hedera-agent-kit": "^3.4.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "tsup": "^8.5.1",
     "typescript": "^5.4.0"
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.77.0",
-    "dotenv": "^16.3.1",
     "ethers": "^6.15.0",
     "zod": "^3.25.76"
   }
