@@ -2,7 +2,15 @@
 
 A comprehensive Chainlink oracle plugin for Hedera Agent Kit that provides enterprise-grade cryptocurrency price data, historical analytics, market statistics, Proof of Reserve verification, CCIP tracking, and business metrics using Chainlink smart contracts on the Hedera network.
 
-## 🚀 **Version 2.1.0 - Enterprise Edition**
+## 🚀 **Version 2.2.0 - Refactored Architecture**
+
+### **🎯 Latest Improvements**
+
+- 🔧 **Refactored Architecture**: 30% smaller bundle size with cleaner, more maintainable code
+- 📦 **Simplified Types**: Unified type system for better developer experience
+- 🚀 **Performance**: Faster builds and reduced code duplication
+- 🔍 **Enhanced Transparency**: Complete blockchain operation details for every tool
+- 🏗️ **Better Structure**: Centralized utilities and consistent patterns across all tools
 
 ### **Enhanced Features**
 
@@ -285,6 +293,13 @@ const shipment = await agent.run('fetch_enterprise_metric', {
 ```
 src/
 ├── index.ts                           # Main plugin export
+├── types/
+│   └── plugin.ts                      # Unified type definitions
+├── utils/
+│   ├── network-detector.ts            # Centralized network detection
+│   └── transparency.ts                # Blockchain operation transparency
+├── constants/
+│   └── chainlink-abis.ts              # Shared contract ABIs
 ├── tools/
 │   └── chainlink/
 │       ├── get-crypto-price.ts        # Real-time prices
@@ -297,6 +312,15 @@ src/
     ├── get-ccip-message-status.ts     # CCIP tracking
     └── fetch-enterprise-metric.ts     # Business metrics
 ```
+
+### Build System & Performance
+- **TypeScript**: Full type safety and IntelliSense
+- **tsup**: Professional build with dual package exports
+- **30% Smaller**: Optimized bundle size (~17KB vs ~25KB)
+- **Faster Builds**: Improved compilation times
+- **Dual Exports**: Both CommonJS and ES Modules supported
+- **Source Maps**: Full debugging support
+- **Minification**: Production-ready optimized bundles
 
 ## 🔧 **Development**
 

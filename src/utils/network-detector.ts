@@ -7,36 +7,30 @@ export interface NetworkConfig {
   chainId: string;
 }
 
+const NETWORK_CONFIGS = {
+  mainnet: {
+    network: 'mainnet' as const,
+    rpcEndpoint: 'https://mainnet.hashio.io/api',
+    chainId: '295629'
+  },
+  testnet: {
+    network: 'testnet' as const,
+    rpcEndpoint: 'https://testnet.hashio.io/api',
+    chainId: '296'
+  }
+};
+
 export function detectNetwork(client: Client | null): NetworkConfig {
   if (!client) {
-    return {
-      network: 'testnet',
-      rpcEndpoint: 'https://testnet.hashio.io/api',
-      chainId: '296'
-    };
+    return NETWORK_CONFIGS.testnet;
   }
 
   try {
     const clientStr = client.toString();
-    if (clientStr.includes('mainnet') || clientStr.includes('295629')) {
-      return {
-        network: 'mainnet',
-        rpcEndpoint: 'https://mainnet.hashio.io/api',
-        chainId: '295629'
-      };
-    } else {
-      return {
-        network: 'testnet', 
-        rpcEndpoint: 'https://testnet.hashio.io/api',
-        chainId: '296'
-      };
-    }
+    const isMainnet = clientStr.includes('mainnet') || clientStr.includes('295629');
+    return isMainnet ? NETWORK_CONFIGS.mainnet : NETWORK_CONFIGS.testnet;
   } catch (error) {
     console.warn('Network detection failed, defaulting to testnet:', error);
-    return {
-      network: 'testnet',
-      rpcEndpoint: 'https://testnet.hashio.io/api', 
-      chainId: '296'
-    };
+    return NETWORK_CONFIGS.testnet;
   }
 }

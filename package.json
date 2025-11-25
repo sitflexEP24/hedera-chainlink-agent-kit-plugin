@@ -1,7 +1,7 @@
 {
   "name": "@fermindietze/hedera-chainlink-agent-kit-plugin",
-  "version": "2.1.0",
-  "description": "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics",
+  "version": "2.2.0",
+  "description": "Comprehensive Chainlink Oracle Plugin for Hedera Agent Kit - Real-time prices, historical data, statistics, Proof of Reserve verification, CCIP tracking, and enterprise metrics with enhanced transparency and refactored architecture",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -52,7 +52,9 @@
     "ccip",
     "cross-chain",
     "enterprise",
-    "business-metrics"
+    "business-metrics",
+    "transparency",
+    "refactored"
   ],
   "author": "Fermin Dietze",
   "license": "MIT",

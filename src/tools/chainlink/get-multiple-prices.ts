@@ -1,53 +1,30 @@
 // tools/chainlink/get-multiple-prices.ts
 import { z } from "zod";
 import { Client } from "@hashgraph/sdk";
-import { getCryptoPriceExecute } from "./get-crypto-price.js";
+import { getCryptoPriceTool } from "./get-crypto-price.js";
+import { createAPITransparencyInfo } from "../../utils/transparency.js";
+import { Tool, OperationResult } from "../../types/plugin.js";
 
-export const getMultiplePricesParameters = z.object({
+const parameters = z.object({
   pairs: z.array(z.object({
     base: z.string().describe("Base symbol (e.g. BTC, ETH, HBAR)"),
-    quote: z.string().describe("Quote currency (e.g. USD, USDC)"),
+    quote: z.string().describe("Quote currency (e.g. USD)"),
   })).describe("Array of trading pairs to fetch prices for"),
 });
 
-const getMultiplePricesPrompt = `
-Fetches multiple cryptocurrency prices in a single request using Chainlink oracle smart contracts on Hedera.
-
-Parameters:
-- pairs: Array of trading pairs with base and quote symbols
-
-Returns array of price data for all requested pairs.
-`;
-
-export async function getMultiplePricesExecute(
-  client: Client,
-  context: any,
-  params: z.infer<typeof getMultiplePricesParameters>
-) {
+async function execute(client: Client, context: any, params: z.infer<typeof parameters>): Promise<OperationResult> {
+  const { pairs } = params;
   const results = [];
   const errors = [];
-
-  // Validate each pair before processing
-  for (const pair of params.pairs) {
-    // Input validation
-    if (!pair.base || typeof pair.base !== 'string' || pair.base.trim().length === 0) {
-      errors.push({
-        pair: `${pair.base}/${pair.quote}`,
-        error: "Invalid base symbol: must be a non-empty string"
-      });
-      continue;
-    }
-    
-    if (!pair.quote || typeof pair.quote !== 'string' || pair.quote.trim().length === 0) {
-      errors.push({
-        pair: `${pair.base}/${pair.quote}`,
-        error: "Invalid quote symbol: must be a non-empty string"
-      });
-      continue;
-    }
-
+  
+  for (const pair of pairs) {
     try {
-      const result = await getCryptoPriceExecute(client, context, pair);
+      // Validate pair before processing
+      if (!pair.base?.trim() || !pair.quote?.trim()) {
+        throw new Error("Invalid pair: base and quote must be non-empty strings");
+      }
+      
+      const result = await getCryptoPriceTool.execute(client, context, pair);
       results.push(result);
     } catch (error: any) {
       errors.push({
@@ -56,29 +33,39 @@ export async function getMultiplePricesExecute(
       });
     }
     
-    // Add small delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Rate limiting delay
+    if (pairs.indexOf(pair) < pairs.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
   }
+
+  const transparency = createAPITransparencyInfo('batch_operation', 'multiple_price_request', {
+    totalRequested: pairs.length,
+    successful: results.length,
+    failed: errors.length,
+    rateLimitDelay: '200ms',
+    pairs: pairs.map(p => `${p.base}/${p.quote}`)
+  });
 
   return {
     results,
     errors,
-    totalRequested: params.pairs.length,
+    totalRequested: pairs.length,
     successCount: results.length,
     errorCount: errors.length,
     timestamp: new Date().toISOString(),
-    note: errors.length > 0 ? `${errors.length} pairs failed to fetch` : "All pairs fetched successfully"
+    blockchainOperation: transparency
   };
 }
 
 export const CHAINLINK_GET_MULTIPLE_PRICES = "chainlink_get_multiple_prices";
 
-export const getMultiplePricesTool = {
+export const getMultiplePricesTool: Tool = {
   method: CHAINLINK_GET_MULTIPLE_PRICES,
   name: "Chainlink: Get Multiple Prices",
-  description: getMultiplePricesPrompt,
-  parameters: getMultiplePricesParameters,
-  execute: getMultiplePricesExecute,
+  description: "Fetches multiple cryptocurrency prices in a single batch request",
+  parameters,
+  execute,
 };
 
 export default getMultiplePricesTool;
